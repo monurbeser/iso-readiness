@@ -1,0 +1,11 @@
+{
+  "name": "iso9001-2026-readiness-check",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Bimser QDMS ISO 9001:2026 Readiness Check with GAP report PDF and email delivery",
+  "scripts": {
+    "dev": "node dev-server.mjs"
+  },
+  "engines": { "node": ">=18" }
+}
