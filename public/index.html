@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>ISO 9001:2026 Readiness Check | Bimser QDMS</title>
-<meta name="description" content="Free self-assessment with a GAP analysis against ISO 9001:2026: processes to revise, digitalization points and the QDMS modules that close each gap. PDF report in English or Turkish.">
+<meta name="description" content="Free self-assessment with a GAP analysis against ISO 9001:2026: processes to revise, digitalization points and the QDMS modules that close each gap. Full PDF report sent by email.">
 <meta property="og:title" content="ISO 9001:2026 Readiness Check and GAP Analysis">
-<meta property="og:description" content="25 questions, about 8 minutes: get a clause-by-clause GAP analysis and a QDMS module roadmap as a PDF.">
+<meta property="og:description" content="25 questions, about 8 minutes: get a clause-by-clause GAP analysis and a QDMS module roadmap as a PDF by email.">
 <meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -134,6 +134,11 @@ input:focus,select:focus{border-color:var(--wine);outline:none;box-shadow:0 0 0 
 /* report */
 .pdfbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:var(--paper);border:1px solid var(--blush-2);border-left:5px solid var(--wine);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow)}
 .pdfbar p{font-weight:600}
+.inpdf{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-top:4px}
+.inpdf div{border:1px solid var(--blush-2);border-radius:10px;padding:14px 16px;background:var(--paper)}
+.inpdf b{display:block;font-size:15px}.inpdf span{display:block;font-size:13.5px;color:var(--ink-3);margin-top:4px}
+.mail-hero{border-top:5px solid var(--wine)}
+.sentbox{display:flex;gap:14px;align-items:flex-start;padding:6px 0}.sentbox .ok{flex:none;width:40px;height:40px;border-radius:50%;background:var(--wine);color:#fff;display:grid;place-items:center;font-size:20px;font-weight:700}
 .pdfbar span{display:block;font-weight:400;font-size:14px;color:var(--ink-3)}
 .summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;margin-top:28px;padding-top:24px;border-top:1px solid var(--rule)}
 .summary b{display:block;font-family:var(--serif);font-size:34px;line-height:1;color:var(--wine);font-weight:600}
@@ -263,7 +268,7 @@ const CONFIG = {
   shareUrl: "",
   turnstileSiteKey: "",
   transitionDeadline: "2029-09-30",
-  autoDownloadPdf: true,
+  autoDownloadPdf: false,
   pdfLib: ["/vendor/pdfmake.min.js", "/vendor/vfs_fonts.js"],
   hotRule: { maxReadiness: 60, minEmployees: 200, tier1: ["AE","SA","QA","OM","AZ","KZ","EG","ZA"] }
 };
@@ -1246,15 +1251,18 @@ const UI = {
 };
 
 Object.assign(UI.en, {
-  heroLead: "Answer {n} questions in about eight minutes. You get a GAP analysis against the 2026 edition, the processes to revise, where to digitalize and which QDMS modules close each gap, as a PDF report you can also receive by email.",
-  emailTitle: "Get this report by email",
-  emailLead: "We will send the PDF report to your inbox. Tick the box if you would also like a QDMS specialist to contact you.",
+  heroLead: "Answer {n} questions in about eight minutes. You see your readiness score straight away and receive the full GAP analysis by email as a PDF: the processes to revise, where to digitalize and which QDMS modules close each gap.",
+  emailTitle: "Get your full GAP report by email",
+  emailLead: "Your full report is sent as a PDF to your inbox, usually within a minute. Tick the box if you would also like a QDMS specialist to contact you.",
+  inPdf: [["What changes in 2026", "The new and revised requirements, clause by clause"], ["Clause-by-clause GAP analysis", "Score, status and the process to revise for each requirement"], ["Digitalization points", "Where manual work will grow, and the QDMS module for each"], ["QDMS module roadmap", "Which modules close which gaps, by priority"]],
+  sentTitle: "Your report is on its way",
+  sentLead: "We sent the PDF report to {e}. If it is not in your inbox within a few minutes, check the spam or promotions folder.",
   wantContact: "I would like a QDMS specialist to contact me about this report.",
   consent: "I agree that Bimser processes my details to send this report and to contact me about it.",
   sendReport: "Email me the report", sending: "Sending your report…",
   mailOk: "Sent. Check your inbox for the email from Bimser QDMS.",
   mailPreview: "Email is switched off on this page, so nothing was sent.",
-  mailFail: "We could not send the email. Download the PDF above, or try again in a few minutes.",
+  mailFail: "We could not send the email right now. Please try again in a few minutes.",
   mailLimit: "Too many requests from this connection. Please try again later.",
   mailBot: "Please complete the security check and try again.",
   pdfFormat: "A4 PDF"
@@ -1267,7 +1275,7 @@ const FLOW = ["profile", ...AREA_STEPS, "digital"];
 const NQ = QUESTIONS.length + DIGITAL.length;
 const qs0 = new URLSearchParams(location.search);
 const state = { lang: "en",
-  step: "intro", profile: { company: "", industry: "", size: "", cert: "" }, answers: {}, leadDraft: null, leadNotice: "", pdfDone: false, startedAt: null };
+  step: "intro", profile: { company: "", industry: "", size: "", cert: "" }, answers: {}, leadDraft: null, leadNotice: "", pdfDone: false, mailSent: "", startedAt: null };
 const tracking = (() => { const o = {}; ["utm_source","utm_medium","utm_campaign","utm_content","am","partner","ref"].forEach(k => { const v = qs0.get(k); if (v) o[k] = v.slice(0,80); }); return o; })();
 
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -1422,7 +1430,7 @@ function renderDigital(){
     <div class="qlist">${DIGITAL.map(d => ladder(d.id, L(d.t), SCALE_B)).join("")}</div>${navrow(done(), T("seeReport"), T("answered", { a: ids.filter(x => state.answers[x] !== undefined).length, b: ids.length }))}`);
   wireLadders(ids, done);
   document.getElementById("back").onclick = () => go(AREA_STEPS[AREA_STEPS.length-1]);
-  document.getElementById("next").onclick = () => { state.pdfDone = false; go("report"); };
+  document.getElementById("next").onclick = () => { state.pdfDone = false; state.mailSent = ""; go("report"); };
 }
 
 function exhibitsHTML(sc){
@@ -1447,16 +1455,10 @@ function renderReport(){
   const share = inviteUrl(), li = "https://www.linkedin.com/sharing/share-offsite/?url=" + encodeURIComponent(CONFIG.shareUrl || share), f = state.leadDraft || {};
   root.innerHTML = `${band(T("reportFor", { c: company }), sub)}
   <main class="page lift stack-xl">
-    <div class="pdfbar noprint"><p id="pdfMsg">${esc(T("pdfMaking"))}<span>${esc(T("pdfFormat"))}</span></p><button type="button" class="btn" id="pdfBtn">${esc(T("pdfBtn"))}</button></div>
     <section class="sheet">${exhibitsHTML(sc)}
       <div class="summary"><div><b class="num">${g.major}</b><span>${esc(T("sumMajor"))}</span></div><div><b class="num">${g.partial}</b><span>${esc(T("sumPartial"))}</span></div><div><b class="num">${g.digNeed}</b><span>${esc(T("sumDigital"))}</span></div><div><b class="num">${g.mods.length}</b><span>${esc(T("sumModules"))}</span></div></div></section>
-    <section class="sheet"><p class="ex-label"><b>${esc(T("ex"))} 3</b> ${esc(T("ex3"))}</p><div class="tablewrap"><table class="data"><thead><tr><th style="width:12%">${esc(T("thClause"))}</th><th style="width:30%">${esc(T("thWhat"))}</th><th>${esc(T("thMeans"))}</th></tr></thead><tbody>
-      ${CHANGES_2026.map(c => `<tr><td class="cl">${esc(c.clause)}</td><td><b>${esc(L(c.what))}</b></td><td>${esc(L(c.means))}</td></tr>`).join("")}</tbody></table></div></section>
-    <section class="sheet"><p class="ex-label"><b>${esc(T("ex"))} 4</b> ${esc(T("ex4"))}</p><div class="tablewrap"><table class="data"><thead><tr><th style="width:9%">${esc(T("thClause"))}</th><th style="width:27%">${esc(T("thTopic"))}</th><th style="width:8%;text-align:right;padding-right:20px">${esc(T("thScore"))}</th><th style="width:14%">${esc(T("thStatus"))}</th><th>${esc(T("thRevise"))}</th></tr></thead><tbody>${gapRows}</tbody></table></div></section>
-    <section class="sheet"><p class="ex-label"><b>${esc(T("ex"))} 5</b> ${esc(T("ex5"))}</p><div class="tablewrap"><table class="data"><thead><tr><th style="width:32%">${esc(T("thProcess"))}</th><th style="width:22%">${esc(T("thToday"))}</th><th style="width:16%">${esc(T("thNeed"))}</th><th>${esc(T("thModule"))}</th></tr></thead><tbody>${digRows}</tbody></table></div></section>
-    <section class="sheet"><p class="ex-label"><b>${esc(T("ex"))} 6</b> ${esc(T("ex6"))}</p>${rmTable}${g.more.length ? `<p style="margin-top:20px;color:var(--ink-2);font-size:15px"><b>${esc(T("moreMods"))}:</b> ${g.more.map(m => esc(L(MODULES[m].name))).join(", ")}</p>` : ""}</section>
-    <section class="cta-band"><div><h2>${esc(T("ctaTitle"))}</h2><p>${esc(T("ctaLead"))}</p></div><div class="acts noprint" style="flex-direction:column"><a class="btn light" href="${esc(CONFIG.bookingUrl)}" target="_blank" rel="noopener">${esc(T("book"))}</a><a class="btn ghostlight" href="${esc(CONFIG.starterUrl)}" target="_blank" rel="noopener">${esc(T("starter"))}</a></div></section>
-    <section class="sheet stack noprint" id="mailSection"><div><h2 style="font-size:24px">${esc(T("emailTitle"))}</h2><p style="color:var(--ink-2);margin-top:6px">${esc(T("emailLead"))}</p></div>
+    <section class="sheet stack noprint mail-hero" id="mailSection"><div><h2 style="font-size:24px">${esc(T("emailTitle"))}</h2><p style="color:var(--ink-2);margin-top:6px">${esc(T("emailLead"))}</p></div>
+      <div class="inpdf">${T("inPdf").map(x => `<div><b>${esc(x[0])}</b><span>${esc(x[1])}</span></div>`).join("")}</div>
       <form id="leadForm" class="stack" novalidate><div class="fields">
         <label class="field" for="fName">${esc(T("name"))}<input type="text" id="fName" autocomplete="name" maxlength="120" value="${esc(f.fullName)}"></label>
         <label class="field" for="fEmail">${esc(T("email"))}<input type="email" id="fEmail" autocomplete="email" maxlength="160" value="${esc(f.email)}"></label>
@@ -1470,17 +1472,16 @@ function renderReport(){
         <label class="check" for="fMkt"><input type="checkbox" id="fMkt"><span>${esc(T("marketing"))}</span></label>
         ${CONFIG.turnstileSiteKey ? '<div id="tsBox"></div>' : ""}
         <p class="err" id="formErr" role="alert">${esc(state.leadNotice)}</p><div><button type="submit" class="btn" id="submitBtn">${esc(T("sendReport"))}</button></div></form></section>
+    <section class="cta-band"><div><h2>${esc(T("ctaTitle"))}</h2><p>${esc(T("ctaLead"))}</p></div><div class="acts noprint" style="flex-direction:column"><a class="btn light" href="${esc(CONFIG.bookingUrl)}" target="_blank" rel="noopener">${esc(T("book"))}</a><a class="btn ghostlight" href="${esc(CONFIG.starterUrl)}" target="_blank" rel="noopener">${esc(T("starter"))}</a></div></section>
     <section class="sheet stack noprint"><div><h2 style="font-size:24px">${esc(T("shareTitle"))}</h2><p style="color:var(--ink-2);margin-top:6px">${esc(T("shareLead"))}</p></div>
       <div class="share"><input type="text" id="shareField" readonly value="${esc(share)}" aria-label="${esc(T("copy"))}"><div class="acts"><button type="button" class="btn" id="copyBtn">${esc(T("copy"))}</button><a class="btn quiet" href="${esc(li)}" target="_blank" rel="noopener">${esc(T("linkedin"))}</a><button type="button" class="btn quiet" id="restart">${esc(T("restart"))}</button></div></div></section>
   </main>`;
-  document.getElementById("pdfBtn").onclick = () => makePdf(false);
   document.getElementById("copyBtn").onclick = async () => { try { await navigator.clipboard.writeText(share); toast(T("copied")); } catch (e) { const x = document.getElementById("shareField"); x.focus(); x.select(); toast(T("copyFail")); } };
-  document.getElementById("restart").onclick = () => { Object.assign(state, { answers: {}, leadDraft: null, leadNotice: "", pdfDone: false, profile: { company: "", industry: "", size: "", cert: "" } }); go("intro"); };
+  document.getElementById("restart").onclick = () => { Object.assign(state, { answers: {}, leadDraft: null, leadNotice: "", pdfDone: false, mailSent: "", profile: { company: "", industry: "", size: "", cert: "" } }); go("intro"); };
   document.getElementById("leadForm").onsubmit = onLead;
   if (CONFIG.turnstileSiteKey) mountTurnstile();
-  if (!state.pdfDone && CONFIG.autoDownloadPdf) makePdf(true); else setPdfMsg(state.pdfDone ? T("pdfDownloaded") : T("pdfReady"));
+  if (state.mailSent) showSent();
 }
-function setPdfMsg(m){ const el = document.getElementById("pdfMsg"); if (el) el.innerHTML = `${esc(m)}<span>${esc(T("pdfFormat"))}</span>`; }
 
 /* ===================== EMAIL THE REPORT ===================== */
 let tsWidget = null;
@@ -1523,12 +1524,17 @@ async function onLead(e){
     if (r.status === 429) throw Object.assign(new Error("limit"), { code: "limit" });
     if (r.status === 403 && j.error === "bot_check") throw Object.assign(new Error("bot"), { code: "bot" });
     if (!r.ok || !j.ok) throw new Error(j.error || ("HTTP " + r.status));
-    err.style.color = "var(--st2)"; err.textContent = j.preview ? T("mailPreview") : T("mailOk");
+    if (j.preview) { err.style.color = "var(--st1)"; err.textContent = T("mailPreview"); btn.disabled = false; return; }
+    state.mailSent = lead.email; showSent();
   } catch (x) {
     console.warn("[ISO26] email", x);
     err.style.color = ""; err.textContent = x.code === "limit" ? T("mailLimit") : x.code === "bot" ? T("mailBot") : T("mailFail");
     btn.disabled = false; if (tsWidget !== null && window.turnstile) try { window.turnstile.reset(tsWidget); } catch (e) {}
   }
+}
+function showSent(){
+  const box = document.getElementById("mailSection"); if (!box) return;
+  box.innerHTML = `<div class="sentbox"><span class="ok" aria-hidden="true">✓</span><div><h2 style="font-size:24px">${esc(T("sentTitle"))}</h2><p style="color:var(--ink-2);margin-top:6px">${esc(T("sentLead", { e: state.mailSent }))}</p></div></div>`;
 }
 function inviteUrl(){
   const base = CONFIG.shareUrl || location.href.split("#")[0].split("?")[0];
@@ -1621,12 +1627,6 @@ function buildDoc(){
   };
 }
 function pdfName(){ const c = (state.profile.company || "").normalize("NFKD").replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-").slice(0, 40); return T("pdfFile") + (c ? "-" + c : "") + "-" + new Date().toISOString().slice(0,10) + ".pdf"; }
-async function makePdf(auto){
-  const btn = document.getElementById("pdfBtn"); if (btn) btn.disabled = true; setPdfMsg(T("pdfMaking"));
-  try { await loadPdfLib(); window.pdfMake.createPdf(buildDoc()).download(pdfName()); state.pdfDone = true; setPdfMsg(T("pdfDownloaded")); }
-  catch (e) { console.warn("[ISO26] pdf", e); setPdfMsg(auto ? T("pdfReady") : T("pdfFail")); }
-  if (btn) btn.disabled = false;
-}
 
 /* ===================== ROUTER ===================== */
 function toast(m){ const el = document.getElementById("toast"); el.textContent = m; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, 2400); }
